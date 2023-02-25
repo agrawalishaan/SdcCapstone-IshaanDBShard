@@ -506,6 +506,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.listen(3000, async () => {
   console.log('Listening at http://localhost:3000');
-  await client.connect();
+  // await client.connect();
   console.log('database connected');
 });
