@@ -7,6 +7,7 @@ export default function HelpfulButton({ helpfulness, id, type }) {
   const [upClick, setUp] = useState(true);
 
   const upVote = () => {
+    // console.log('upvote for helpful sent');
     setClicked(true);
     setHelp(help + 1);
     axios.post('/helpful', null, { params: { id, type } });

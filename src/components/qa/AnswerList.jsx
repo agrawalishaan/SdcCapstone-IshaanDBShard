@@ -16,12 +16,13 @@ export default function AnswerList({ answers }) {
   let sellers = {};
   let renderAnswer = [];
   useEffect(() => {
+    console.log(`the answers are: ${JSON.stringify(answers)}`);
     if (answerLog > answerLength) {
       setMore(false);
       setLess(true);
     }
     if (answers.length === 2) {
-      console.log(answers);
+      // console.log(answers);
       setMore(false);
       setLess(false);
     }

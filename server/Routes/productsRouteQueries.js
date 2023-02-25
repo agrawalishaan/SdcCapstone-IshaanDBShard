@@ -2,7 +2,8 @@ const db = require('../database');
 
 async function getProduct(pid) {
   return db
-    .query(`
+    .query(
+      `
       SELECT
         p.id, p.name, p.slogan, p.description, p.default_price, category, ARRAY_AGG(
           properties
@@ -11,44 +12,53 @@ async function getProduct(pid) {
       LEFT JOIN (
         SELECT product_id, jsonb_build_object('feature',feature, 'value',value) AS properties
         FROM features f
-        WHERE product_id = ${pid}
+        WHERE product_id = $1
       ) l
       ON p.id = l.product_id
       LEFT JOIN categories c
       ON p.category_id = c.id
-      WHERE p.id = ${pid}
+      WHERE p.id = $2
       GROUP BY p.id, p.name, p.slogan, p.description, p.default_price, category
-    `)
+    `,
+      [pid, pid],
+    )
     .then(({ rows }) => rows[0]);
 }
 
 async function getProducts(page = 1, count = 5) {
   return db
-    .query(`
+    .query(
+      `
       SELECT
         products.id, products.name, products.slogan, products.description, products.default_price, categories.category
       FROM products
       LEFT JOIN categories
       ON products.category_id = categories.id
       ORDER BY products.id ASC
-      LIMIT ${count} OFFSET ${count * (page - 1)}
-    `)
+      LIMIT $1 OFFSET $2}
+    `,
+      [count, count * (page - 1)],
+    )
     .then(({ rows }) => rows);
 }
 
 async function getRelatedProducts(pid) {
   return db
-    .query(`
+    .query(
+      `
       SELECT related_product_id
       FROM related
-      WHERE current_product_id = ${pid}
-    `)
+      WHERE current_product_id = $1
+    `,
+      [pid],
+    )
     .then(({ rows }) => rows.map((row) => row.related_product_id));
 }
 
 async function getProductStyles(pid) {
   return db
-    .query(`
+    .query(
+      `
       SELECT s.product_id, ARRAY_AGG(
         jsonb_build_object(
           'style_id', s.style_id,
@@ -82,9 +92,11 @@ async function getProductStyles(pid) {
         FROM skus sk
         GROUP BY sk.style_id
       ) slj ON slj.style_id = s.style_id
-      WHERE s.product_id = ${pid}
+      WHERE s.product_id = $1
       GROUP BY s.product_id
-    `)
+    `,
+      [pid],
+    )
     .then(({ rows }) => rows[0]);
 }
 

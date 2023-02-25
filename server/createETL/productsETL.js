@@ -1,10 +1,13 @@
+const path = require('path');
 const db = require('../database');
 
-const dataPath = '../../Data/';
+// const dataPath = '../../Data/';
 
 async function buildTables() {
-  db
-    .query(`
+  db.query('DROP TABLE IF EXISTS ;')
+    .then(() => {
+      db
+        .query(`
       CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY,
         name VARCHAR (30) NOT NULL,
@@ -12,10 +15,11 @@ async function buildTables() {
         description VARCHAR (512) NOT NULL,
         category VARCHAR (20) NOT NULL,
         default_price VARCHAR (10) NOT NULL
-      )`)
+      )`);
+    })
     .then(() => db.query(`
       COPY products(id, name, slogan, description, category, default_price)
-        FROM '${path.join(__dirname, dataPath + 'product.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/product.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -29,7 +33,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY features(id, product_id, feature, value)
-        FROM '${path.join(__dirname, dataPath + 'features.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/features.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -45,7 +49,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY styles(id, product_id, name, sale_price, original_price, default_style)
-        FROM '${path.join(__dirname, dataPath + 'styles.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/styles.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -59,21 +63,23 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY photos(id, style_id, url, thumbnail_url)
-        FROM '${path.join(__dirname, dataPath + 'photos.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/photos.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
-    .then(() => db.query(`
+    .then(() => {
+      db.query(`
       CREATE TABLE IF NOT EXISTS skus (
         id INTEGER PRIMARY KEY,
         style_id INTEGER NOT NULL
           REFERENCES styles(id),
         size VARCHAR (10),
         quantity INTEGER
-    )`))
+    )`);
+    })
     .then(() => db.query(`
       COPY skus(id, style_id, size, quantity)
-        FROM '${path.join(__dirname, dataPath + 'skus.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/skus.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -87,7 +93,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY related(id, current_product_id, related_product_id)
-        FROM '${path.join(__dirname, dataPath + 'related.csv')}'
+        FROM '${path.join(__dirname, '../../../../../../private/tmp/data/related.csv')}'
         DELIMITER ','
         CSV HEADER
         NULL '0'
@@ -120,42 +126,48 @@ async function buildTables() {
     .then(() => db.query(`
         ALTER TABLE products
         DROP COLUMN category
-    `));
+    `))
     .catch((err) => console.log('err: ', err));
 }
 
 async function makeIndexes() {
   db
-  .query(`
+    .query(`
     CREATE INDEX idx_feats_product_id
     ON features(product_id)
   `)
-  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on features'));
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on features'));
   db
-  .query(`
+    .query(`
     CREATE INDEX idx_styles_product_id
     ON styles(product_id)
   `)
-  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on styles'));
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on styles'));
   db
-  .query(`
+    .query(`
     CREATE INDEX idx_curr_product_id
     ON related(current_product_id)
   `)
-  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on related products'));
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on related products'));
   db
-  .query(`
+    .query(`
     CREATE INDEX idx_photos_style_id
     ON photos(style_id)
   `)
-  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on photos'));
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on photos'));
   db
-  .query(`
+    .query(`
     CREATE INDEX idx_skus_style_id
     ON skus(style_id)
   `)
-  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on skus'));
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on skus'));
 }
 
-await buildTables();
-await makeIndexes();
+async function generateProductsAndMakeIndexes() {
+  await buildTables();
+  await makeIndexes();
+}
+
+db.connect().then(() => {
+  generateProductsAndMakeIndexes();
+});

@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getProduct, getProducts, getRelatedProducts, getProductStyles
+  getProduct, getProducts, getRelatedProducts, getProductStyles,
 } = require('./productsRouteQueries');
 
 const router = express.Router();
