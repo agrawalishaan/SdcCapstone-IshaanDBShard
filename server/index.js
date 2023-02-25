@@ -17,6 +17,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
 
 // ----- Routes ----- //
+
 app.get('/products', (req, res) => {
   axios.get('https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/products', {
     headers: {
